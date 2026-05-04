@@ -1,14 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package Vista;
 
+import Entidades.Ficha;
 import Logica.Ajedrez;
 import Logica.Sockets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -16,36 +14,54 @@ import javax.swing.JOptionPane;
  */
 public class VistaAreaJuego extends javax.swing.JFrame implements MouseListener {
 
-    /**
-     * Creates new form VistaAreaJuego
-     */
     private Ajedrez ajedrez;
     private VistaFicha matrizGrafica[][];
     private Sockets sock;
+    private int jugadorLocal;
+    private boolean finJuegoMostrado;
+
+    private javax.swing.Timer cronometro;
+    private long tiempoInicio;
 
     public VistaAreaJuego() {
         this.ajedrez = new Ajedrez(8, 8);
         this.matrizGrafica = new VistaFicha[8][8];
+        this.jugadorLocal = 0;
+        this.finJuegoMostrado = false;
         initComponents();
-        setTitle("AJEDREZ");
+        configurarCronometro();
         setLocationRelativeTo(null);
         agregar();
+        actualizarTitulo();
     }
 
-    public Ajedrez getAjedrez() {
-        return ajedrez;
+    public Ajedrez getAjedrez() { return ajedrez; }
+    public void setAjedrez(Ajedrez ajedrez) { this.ajedrez = ajedrez; }
+    public VistaFicha[][] getMatrizGrafica() { return matrizGrafica; }
+    public void setMatrizGrafica(VistaFicha[][] matrizGrafica) { this.matrizGrafica = matrizGrafica; }
+
+    /**
+     * Crea el javax.swing.Timer que actualiza el lblTiempo cada segundo.
+     * Corre dentro del EDT (es lo que hace javax.swing.Timer por diseño),
+     * así que es seguro tocar componentes Swing desde su action listener.
+     */
+    private void configurarCronometro() {
+        cronometro = new javax.swing.Timer(1000, ev -> {
+            long seg = (System.currentTimeMillis() - tiempoInicio) / 1000;
+            lblTiempo.setText(String.format("%02d:%02d", seg / 60, seg % 60));
+        });
     }
 
-    public void setAjedrez(Ajedrez ajedrez) {
-        this.ajedrez = ajedrez;
+    private void iniciarCronometro() {
+        tiempoInicio = System.currentTimeMillis();
+        lblTiempo.setText("00:00");
+        if (!cronometro.isRunning()) {
+            cronometro.start();
+        }
     }
 
-    public VistaFicha[][] getMatrizGrafica() {
-        return matrizGrafica;
-    }
-
-    public void setMatrizGrafica(VistaFicha[][] matrizGrafica) {
-        this.matrizGrafica = matrizGrafica;
+    private void detenerCronometro() {
+        cronometro.stop();
     }
 
     /**
@@ -60,6 +76,7 @@ public class VistaAreaJuego extends javax.swing.JFrame implements MouseListener 
         panelMenu = new javax.swing.JPanel();
         btnServidor = new javax.swing.JButton();
         btnCliente = new javax.swing.JButton();
+        lblTiempo = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         panelAreaJuego = new javax.swing.JPanel();
 
@@ -81,25 +98,33 @@ public class VistaAreaJuego extends javax.swing.JFrame implements MouseListener 
             }
         });
 
+        lblTiempo.setFont(new java.awt.Font("Monospaced", java.awt.Font.BOLD, 24));
+        lblTiempo.setForeground(new java.awt.Color(255, 255, 255));
+        lblTiempo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblTiempo.setText("00:00");
+
         javax.swing.GroupLayout panelMenuLayout = new javax.swing.GroupLayout(panelMenu);
         panelMenu.setLayout(panelMenuLayout);
         panelMenuLayout.setHorizontalGroup(
             panelMenuLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelMenuLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(btnServidor, javax.swing.GroupLayout.DEFAULT_SIZE, 256, Short.MAX_VALUE)
+                .addComponent(btnServidor, javax.swing.GroupLayout.DEFAULT_SIZE, 220, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnCliente, javax.swing.GroupLayout.DEFAULT_SIZE, 245, Short.MAX_VALUE)
+                .addComponent(btnCliente, javax.swing.GroupLayout.DEFAULT_SIZE, 220, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lblTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         panelMenuLayout.setVerticalGroup(
             panelMenuLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelMenuLayout.createSequentialGroup()
-                .addGap(60, 60, 60)
+                .addGap(20, 20, 20)
                 .addGroup(panelMenuLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnServidor, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCliente, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(62, 62, 62))
+                    .addComponent(btnCliente, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblTiempo, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(20, 20, 20))
         );
 
         panelAreaJuego.setBackground(new java.awt.Color(204, 204, 204));
@@ -131,19 +156,67 @@ public class VistaAreaJuego extends javax.swing.JFrame implements MouseListener 
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnClienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClienteActionPerformed
-        System.out.println("SOLICITUD DE LA CONEXION DEL CLIENTE");
-        sock = new Sockets("localhost", 5000);
-        recibirObjeto();
+        jugadorLocal = 2;
+        btnServidor.setEnabled(false);
+        btnCliente.setEnabled(false);
+        setTitle("AJEDREZ - Jugador 2 (conectando...)");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final Sockets nuevo = new Sockets("localhost", 5000);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!nuevo.estaConectado()) {
+                            JOptionPane.showMessageDialog(VistaAreaJuego.this, "No se pudo conectar al servidor.");
+                            jugadorLocal = 0;
+                            btnServidor.setEnabled(true);
+                            btnCliente.setEnabled(true);
+                            setTitle("AJEDREZ");
+                            return;
+                        }
+                        sock = nuevo;
+                        iniciarCronometro();
+                        actualizarTitulo();
+                        lanzarHiloRecepcion();
+                    }
+                });
+            }
+        }, "ChessClientConnect").start();
     }//GEN-LAST:event_btnClienteActionPerformed
 
     private void btnServidorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnServidorActionPerformed
-        System.out.println("SOLICITUD DE LA CONEXION DEL SERVIDOR");
-        sock = new Sockets(5000);
-        recibirObjeto();
+        jugadorLocal = 1;
+        btnServidor.setEnabled(false);
+        btnCliente.setEnabled(false);
+        setTitle("AJEDREZ - Jugador 1 (esperando conexión...)");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final Sockets nuevo = new Sockets(5000);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!nuevo.estaConectado()) {
+                            JOptionPane.showMessageDialog(VistaAreaJuego.this, "No se pudo iniciar el servidor.");
+                            jugadorLocal = 0;
+                            btnServidor.setEnabled(true);
+                            btnCliente.setEnabled(true);
+                            setTitle("AJEDREZ");
+                            return;
+                        }
+                        sock = nuevo;
+                        sock.enviar(ajedrez);
+                        iniciarCronometro();
+                        actualizarTitulo();
+                        lanzarHiloRecepcion();
+                    }
+                });
+            }
+        }, "ChessServerAccept").start();
     }//GEN-LAST:event_btnServidorActionPerformed
 
     public void agregar() {
-
         for (int i = 0; i < ajedrez.getFilas(); i++) {
             for (int j = 0; j < ajedrez.getColumnas(); j++) {
                 this.matrizGrafica[i][j] = new VistaFicha(ajedrez.getAreaJuego()[i][j]);
@@ -157,29 +230,100 @@ public class VistaAreaJuego extends javax.swing.JFrame implements MouseListener 
         panelAreaJuego.removeAll();
         agregar();
         revalidate();
+        repaint();
     }
 
-    public void recibirObjeto() {
-        new Thread(new Runnable() {
+    private void lanzarHiloRecepcion() {
+        Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
-                    ajedrez = sock.recibir();
-                    actualizar();
+                while (sock != null && sock.estaConectado()) {
+                    final Ajedrez nuevo = sock.recibir();
+                    if (nuevo == null) break;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            ajedrez = nuevo;
+                            actualizar();
+                            actualizarTitulo();
+                            comprobarFinDeJuego();
+                        }
+                    });
                 }
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        actualizarTitulo();
+                    }
+                });
             }
-        }).start();
+        }, "ChessReceiver");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void actualizarTitulo() {
+        String rol = (jugadorLocal == 0) ? "" : " - Jugador " + jugadorLocal;
+        String estadoTxt;
+        int estado = ajedrez.getEstadoJuego();
+        if (estado == Ajedrez.ESTADO_JAQUE_MATE) {
+            estadoTxt = "JAQUE MATE - gana Jugador " + ajedrez.getJugadorGanador();
+        } else if (estado == Ajedrez.ESTADO_AHOGADO) {
+            estadoTxt = "REY AHOGADO - tablas";
+        } else if (sock == null || !sock.estaConectado()) {
+            estadoTxt = (jugadorLocal == 1) ? "esperando conexión..." : "sin conexión";
+        } else {
+            boolean miTurno = (ajedrez.getJugador() == jugadorLocal);
+            String prefijo = (estado == Ajedrez.ESTADO_JAQUE) ? "¡JAQUE! " : "";
+            estadoTxt = prefijo + (miTurno ? "Tu turno" : "Turno del oponente");
+        }
+        setTitle("AJEDREZ" + rol + " - " + estadoTxt);
+    }
+
+    private void comprobarFinDeJuego() {
+        if (finJuegoMostrado) return;
+        int estado = ajedrez.getEstadoJuego();
+        if (estado != Ajedrez.ESTADO_JAQUE_MATE && estado != Ajedrez.ESTADO_AHOGADO) return;
+
+        finJuegoMostrado = true;
+        detenerCronometro();
+
+        String mensaje;
+        if (estado == Ajedrez.ESTADO_AHOGADO) {
+            mensaje = "Empate.\nLa partida se reiniciará.";
+        } else {
+            int ganador = ajedrez.getJugadorGanador();
+            if (jugadorLocal != 0 && ganador == jugadorLocal) {
+                mensaje = "¡Has ganado!\nLa partida se reiniciará.";
+            } else if (jugadorLocal != 0) {
+                mensaje = "Has perdido. Ganó el Jugador " + ganador + ".\nLa partida se reiniciará.";
+            } else {
+                mensaje = "Ganó el Jugador " + ganador + ".\nLa partida se reiniciará.";
+            }
+        }
+        JOptionPane.showMessageDialog(this, mensaje);
+        reiniciarPartida();
+    }
+
+    /**
+     * Restablece la partida al estado inicial. Como new Ajedrez(8,8) produce
+     * un tablero determinista, ambos clientes pueden reiniciar localmente sin
+     * necesidad de sincronizar por socket: tras cerrar su diálogo respectivo
+     * cada lado obtiene la misma posición inicial. Las jugadas siguientes
+     * vuelven a sincronizarse normalmente por la tubería existente.
+     */
+    private void reiniciarPartida() {
+        ajedrez = new Ajedrez(8, 8);
+        finJuegoMostrado = false;
+        actualizar();
+        actualizarTitulo();
+        iniciarCronometro();
     }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -196,9 +340,7 @@ public class VistaAreaJuego extends javax.swing.JFrame implements MouseListener 
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(VistaAreaJuego.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new VistaAreaJuego().setVisible(true);
@@ -210,62 +352,57 @@ public class VistaAreaJuego extends javax.swing.JFrame implements MouseListener 
     private javax.swing.JButton btnCliente;
     private javax.swing.JButton btnServidor;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblTiempo;
     private javax.swing.JPanel panelAreaJuego;
     private javax.swing.JPanel panelMenu;
     // End of variables declaration//GEN-END:variables
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        if (sock == null || !sock.estaConectado()) return;
+        if (jugadorLocal == 0) return;
+        int estado = ajedrez.getEstadoJuego();
+        if (estado == Ajedrez.ESTADO_JAQUE_MATE || estado == Ajedrez.ESTADO_AHOGADO) return;
+        if (ajedrez.getJugador() != jugadorLocal) return;
 
         int contador = 0;
         for (int i = 0; i < ajedrez.getAreaJuego().length; i++) {
             for (int j = 0; j < ajedrez.getAreaJuego()[0].length; j++) {
-
                 if (e.getSource() == panelAreaJuego.getComponent(contador++)) {
-
-                    if (!ajedrez.getAreaJuego()[i][j].getPuedeSerComida()) {
-                        ajedrez.anularFichasMarcadas();
-                        ajedrez.anularFichasPuedenSerComidas();
-
-                        ajedrez.getAreaJuego()[i][j].setFichaMarcada(true);
-                        ajedrez.setAtacante(ajedrez.getAreaJuego()[i][j]);
-                        ajedrez.movimientos();
-
-                    } else if (ajedrez.getAreaJuego()[i][j].getPuedeSerComida()) {
-                        ajedrez.cambioFichas(ajedrez.getAreaJuego()[i][j]);
-                        actualizar();
-                        sock.enviar(ajedrez);
-
-                        if (ajedrez.jaqueMate()) {
-                            JOptionPane.showMessageDialog(null, "Jugador #" + ajedrez.getJugadorGanador() + " ha ganado");
-                        }
-
-                    }
+                    manejarClick(i, j);
                 }
             }
         }
-
         actualizar();
+        actualizarTitulo();
     }
 
-    @Override
-    public void mousePressed(MouseEvent e
-    ) {
+    private void manejarClick(int i, int j) {
+        Ficha celda = ajedrez.getAreaJuego()[i][j];
+
+        if (celda.getPuedeSerComida()) {
+            ajedrez.cambioFichas(celda);
+            ajedrez.anularFichasMarcadas();
+            ajedrez.anularFichasPuedenSerComidas();
+            sock.enviar(ajedrez);
+            comprobarFinDeJuego();
+            return;
+        }
+
+        ajedrez.anularFichasMarcadas();
+        ajedrez.anularFichasPuedenSerComidas();
+        if (celda.getTipoFicha() != Ajedrez.TIPO_VACIO
+                && celda.getTipoJugador() == jugadorLocal) {
+            celda.setFichaMarcada(true);
+            ajedrez.setAtacante(celda);
+            ajedrez.movimientos();
+        } else {
+            ajedrez.setAtacante(null);
+        }
     }
 
-    @Override
-    public void mouseReleased(MouseEvent e
-    ) {
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e
-    ) {
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e
-    ) {
-    }
+    @Override public void mousePressed(MouseEvent e) {}
+    @Override public void mouseReleased(MouseEvent e) {}
+    @Override public void mouseEntered(MouseEvent e) {}
+    @Override public void mouseExited(MouseEvent e) {}
 }

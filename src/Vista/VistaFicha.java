@@ -1,10 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
- */
 package Vista;
 
 import Entidades.Ficha;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import javax.swing.JLabel;
 
 /**
@@ -15,9 +15,20 @@ public class VistaFicha extends javax.swing.JPanel {
 
     private Ficha ficha;
 
+    // Colores de las casillas del tablero
+    private static final Color COLOR_CASILLA_CLARA = new Color(240, 217, 181);
+    private static final Color COLOR_CASILLA_OSCURA = new Color(181, 136, 99);
+
+    // Colores de resaltado
+    private static final Color COLOR_SELECCIONADA   = new Color(255, 255, 0, 140);   // amarillo
+    private static final Color COLOR_MOVIMIENTO     = new Color(0, 200, 80, 180);    // verde para casilla vacía
+    private static final Color COLOR_CAPTURA        = new Color(220, 40, 40, 140);   // rojo para captura
+
     public VistaFicha(Ficha ficha) {
         this.ficha = ficha;
         initComponents();
+        setOpaque(true);
+        actualizarColorBase();
     }
 
     public Ficha getFicha() {
@@ -36,6 +47,45 @@ public class VistaFicha extends javax.swing.JPanel {
         this.jlabelImagen = jlabelImagen;
     }
 
+    /** Pinta el color base de la casilla (claro u oscuro del tablero). */
+    private void actualizarColorBase() {
+        setBackground(ficha.getColor() == 0 ? COLOR_CASILLA_CLARA : COLOR_CASILLA_OSCURA);
+    }
+
+    /**
+     * Override de paint() para dibujar el overlay de resaltado DESPUÉS de
+     * que los hijos (la imagen de la pieza) ya han sido pintados.
+     * Esto garantiza que el overlay quede encima de la imagen.
+     */
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);  // pinta fondo, imagen y demás hijos
+
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        if (ficha.getFichaMarcada()) {
+            // Pieza seleccionada: halo amarillo
+            g2.setColor(COLOR_SELECCIONADA);
+            g2.fillRect(0, 0, getWidth(), getHeight());
+
+        } else if (ficha.getPuedeSerComida()) {
+            if (ficha.getTipoFicha() == 0) {
+                // Casilla vacía: círculo verde centrado
+                g2.setColor(COLOR_MOVIMIENTO);
+                int tam = Math.min(getWidth(), getHeight()) / 3;
+                g2.fillOval(getWidth() / 2 - tam / 2, getHeight() / 2 - tam / 2, tam, tam);
+            } else {
+                // Pieza enemiga capturable: halo rojo con borde resaltado
+                g2.setColor(COLOR_CAPTURA);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.setColor(new Color(200, 0, 0, 220));
+                g2.setStroke(new java.awt.BasicStroke(3));
+                g2.drawRect(1, 1, getWidth() - 3, getHeight() - 3);
+            }
+        }
+        g2.dispose();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.

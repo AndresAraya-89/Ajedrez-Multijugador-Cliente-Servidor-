@@ -2,33 +2,33 @@ package Entidades;
 
 import java.io.Serializable;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 /**
  *
  * @author Andres Araya
  */
 public class Ficha implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private int tipoFicha;
     private int posicionX;
     private int posicionY;
     private int tipoJugador;
     private int color;
-    private boolean primerMovimiento;
+    private boolean haMovido;
     private boolean fichaMarcada;
     private boolean puedeSerComida;
+    private boolean peonAvanzoDosCasillas;
 
     public Ficha(int posicionX, int posicionY) {
         this.tipoFicha = 0;
         this.posicionX = posicionX;
         this.posicionY = posicionY;
         this.tipoJugador = 0;
-        this.primerMovimiento = false;
+        this.haMovido = false;
         this.fichaMarcada = false;
         this.puedeSerComida = false;
+        this.peonAvanzoDosCasillas = false;
         colorFicha();
     }
 
@@ -37,9 +37,10 @@ public class Ficha implements Serializable {
         this.posicionX = posicionX;
         this.posicionY = posicionY;
         this.tipoJugador = tipoJugador;
-        this.primerMovimiento = false;
+        this.haMovido = false;
         this.fichaMarcada = false;
         this.puedeSerComida = false;
+        this.peonAvanzoDosCasillas = false;
         colorFicha();
     }
 
@@ -83,12 +84,21 @@ public class Ficha implements Serializable {
         this.color = color;
     }
 
-    public boolean getPrimerMovimiento() {
-        return primerMovimiento;
+    public boolean getHaMovido() {
+        return haMovido;
     }
 
-    public void setPrimerMovimiento(boolean primerMovimiento) {
-        this.primerMovimiento = primerMovimiento;
+    public void setHaMovido(boolean haMovido) {
+        this.haMovido = haMovido;
+    }
+
+    // Compatibilidad con el nombre original
+    public boolean getPrimerMovimiento() {
+        return haMovido;
+    }
+
+    public void setPrimerMovimiento(boolean haMovido) {
+        this.haMovido = haMovido;
     }
 
     public boolean getFichaMarcada() {
@@ -107,6 +117,14 @@ public class Ficha implements Serializable {
         this.puedeSerComida = puedeSerComida;
     }
 
+    public boolean getPeonAvanzoDosCasillas() {
+        return peonAvanzoDosCasillas;
+    }
+
+    public void setPeonAvanzoDosCasillas(boolean peonAvanzoDosCasillas) {
+        this.peonAvanzoDosCasillas = peonAvanzoDosCasillas;
+    }
+
     public void colorFicha() {
         int x = getPosicionX();
         int y = getPosicionY();
@@ -120,7 +138,9 @@ public class Ficha implements Serializable {
 
     @Override
     public String toString() {
-        return "F[ tF " + tipoFicha + ", pX " + posicionX + ", pY " + posicionY + ", tJ " + tipoJugador + ", c " + color + ", fM " + fichaMarcada + ", sC " + puedeSerComida + " ]";
+        return "F[ tF " + tipoFicha + ", pX " + posicionX + ", pY " + posicionY
+                + ", tJ " + tipoJugador + ", c " + color
+                + ", fM " + fichaMarcada + ", sC " + puedeSerComida + " ]";
     }
 
     public static void main(String[] args) {
